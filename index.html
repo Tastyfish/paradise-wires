@@ -141,12 +141,10 @@
 		
 		var updateHash = function() {
 			// generate hash
-			var hash = "#";
+			var hash = "#l";
 			for(var key in layers) {
 				if(getLayer(key)) {
-					if(hash.length > 1)
-						hash += "-";
-					hash += key;
+					hash += "-" + key;
 				}
 			}
 			
@@ -183,25 +181,16 @@
 		
 		///////////////
 		// filter as requested
-		var setFilter = function(hash, cxt) {
-			console.log("Real: " + window.location.hash + ", cxt: ", cxt);
-			
-			if(hash != null && hash.length > 1) {
-				console.log(hash);
-				
-				var hashSet = hash.substr(1).split("-");
+		var setFilter = function(hash, cxt) {			
+			if(hash != null && hash.length >= 2 && hash.substr(0, 2) == "#l") {
+				var hashSet = hash.substr(2).split("-");
 				
 				for(key in layers) {
-					console.log(key + ": " + hashSet.some(function(a) { return a == key }));
 					updateMap(key, null, hashSet.some(function(a) { return a == key }));
 				}
-				updateHash();
-			} else {
-				console.log("none");
-				
+			} else {				
 				for(key in layers)
 					updateMap(key, null, true);
-				updateHash();
 			}
 		}
 		// load from url initially
