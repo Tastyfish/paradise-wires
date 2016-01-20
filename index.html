@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en/vox">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>NSS Cyberiad Wire & Disposals Map</title>
+	<link rel="icon" type="image/png" href="images/favicon.png"/>
+	<link href="css/bootstrap.min.css" rel="stylesheet"/>
+	<link href="css/font-awesome.min.css" rel="stylesheet"/>
+	<link href="css/leaflet.css" rel="stylesheet"/>
+	<link href="css/map.css" rel="stylesheet"/>
+</head>
+<body role="document">
+	<nav class="navbar navbar-inverse navbar-fixed-top">
+		<div class="container">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand">Wire Map</a>
+			</div>
+			<div class="navbar-collapse collapse" id="navbar">
+				<ul class="nav navbar-nav">
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Layers <span class="caret"/></a>
+						<ul class="dropdown-menu" role="menu" id="layer-list">
+							<li><a data-layer="station"><i class="fa fa-eye fa-fw fa-pull-left"></i>Station</a></li>
+							<li><a data-layer="disposals"><i class="fa fa-eye fa-fw fa-pull-left"></i>Disposals</a></li>
+							<li><a data-layer="wires"><i class="fa fa-eye fa-fw fa-pull-left"></i>Wires</a></li>
+							<li><a data-layer="malmalmalam"><i class="fa fa-eye fa-fw fa-pull-left"></i>Malmalmalam</a></li>
+						</ul>
+					</li>
+					<li id="welcomeBtn" class="active"><a role="button" data-toggle="collapse" data-target="#welcome">Help</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	
+	<div id="map"></div>
+	
+	<div class="container" role="main">
+		<div class="jumbotron collapse in" id="welcome" role="dialog">
+			<h1>Hihi.</h1>
+			<h3><img alt="hihi" src="images/hihi.png"/>&nbsp;Is map of wires and disposals pipes.</h3>
+			<p>
+				Choose layers at top for seeing betters.
+				Is uses <a href="http://jquery.com">JQuery</a> & <a href="http://leafletjs.com">Leaflet</a>.
+			</p>
+			<p><button type="button" class="btn btn-primary btn-lg" data-toggle="collapse" data-target="#welcome" aria-expanded="true" aria-controls="welcome">Yaya</button></p>
+		</div>
+	</div>
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/leaflet.js"></script>
+	<script src="js/leaflet-heat.js"></script>
+	<script src="js/js.cookie-2.0.4.min.js"></script>
+	<script>
+		// google analytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-70465958-1', 'auto');
+		ga('send', 'pageview');
+	</script>
+	<script>
+		// general ui
+		var updateHelp = function() {
+			$("#welcomeBtn").toggleClass("active", !$("#welcome").hasClass("in"));
+		};
+		$("#welcome")
+			.on("show.bs.collapse", updateHelp)
+			.on("hide.bs.collapse", updateHelp);
+		// hide welcome if cookie set
+		if(Cookies.get("visited") == 1) {
+			$("#welcome").collapse();
+		}
+		// update cookie
+		Cookies.set("visited", 1, {expires: 7, path: ""});
+		
+		// initialize map
+		var map = L.map("map", {
+			zoomControl: false,
+			attributionControl: false,
+			minZoom: 2,
+			maxZoom: 5,
+			maxBounds: [[0,0],[256,256]],
+			crs: L.CRS.Simple
+		}).setView([128, 128], 2);
+		L.control.zoom({position: "topleft"}).addTo(map);
+		var layers = {
+			station: L.tileLayer("tiles/{z}/{x}/{y}.png", {
+					minZoom: 2,
+					maxZoom: 5,
+					continuousWorld: true,
+					tms: true,
+					zIndex: 0
+				}).addTo(map),
+			disposals: L.tileLayer("disposals/{z}/{x}/{y}.png", {
+					minZoom: 2,
+					maxZoom: 5,
+					continuousWorld: true,
+					tms: true,
+					zIndex: 1
+				}).addTo(map),
+			wires: L.tileLayer("wires/{z}/{x}/{y}.png", {
+					minZoom: 2,
+					maxZoom: 5,
+					continuousWorld: true,
+					tms: true,
+					zIndex: 2
+				}).addTo(map),
+			malmalmalam: L.tileLayer("mal/{z}/{x}/{y}.png", {
+					minZoom: 2,
+					maxZoom: 5,
+					continuousWorld: true,
+					tms: true,
+					zIndex: 2
+				}).addTo(map)
+		};
+		
+		var setLayer = function(name, state) {
+			if(layers[name] == null)
+				return false;
+			
+			layers[name].setOpacity(state ? 1 : 0);
+			
+			return true;
+		}
+		
+		var getLayer = function(name) {
+			return layers[name].options.opacity > 0;
+		}
+		
+		var updateHash = function() {
+			// generate hash
+			var hash = "#";
+			for(var key in layers) {
+				if(getLayer(key)) {
+					if(hash.length > 1)
+						hash += "-";
+					hash += key;
+				}
+			}
+			
+			// push url state
+			if(hash != window.location.hash) {
+				window.history.pushState(hash, hash, window.location.pathname + hash);
+			}
+		}
+
+		// fn to handle layer toggling
+		var updateMap = function(layer, btn, state) {
+			if(!setLayer(layer, state))
+				return;
+			
+			// update menu icons
+			if(!btn) {
+				btn = $("[data-layer="+layer+"]");
+			}
+			if(btn && btn.size() > 0) {
+				if(state)
+					$(btn).children("i.fa").removeClass("fa-eye-slash").addClass("fa-eye");
+				else
+					$(btn).children("i.fa").removeClass("fa-eye").addClass("fa-eye-slash");
+			}
+		}
+		
+		////////////////////				
+		// set functionality on maps
+		$("#layer-list>li>a").on("click", function() {
+			// toggle the layer
+			updateMap($(this).data("layer"), $(this), !getLayer($(this).data("layer")));
+			updateHash();
+		});
+		
+		///////////////
+		// filter as requested
+		var setFilter = function(hash, cxt) {
+			console.log("Real: " + window.location.hash + ", cxt: ", cxt);
+			
+			if(hash != null && hash.length > 1) {
+				console.log(hash);
+				
+				var hashSet = hash.substr(1).split("-");
+				
+				for(key in layers) {
+					console.log(key + ": " + hashSet.some(function(a) { return a == key }));
+					updateMap(key, null, hashSet.some(function(a) { return a == key }));
+				}
+				updateHash();
+			} else {
+				console.log("none");
+				
+				for(key in layers)
+					updateMap(key, null, true);
+				updateHash();
+			}
+		}
+		// load from url initially
+		setFilter(window.location.hash, 1);
+		// and also from pops
+		$(window).bind("popstate", function(event) {
+			setFilter(event.originalEvent.state, 2);
+		});
+	</script>
+</body>
+</html>

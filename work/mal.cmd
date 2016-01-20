@@ -1,0 +1,1 @@
+python splitimg.py ../mal malmalmalam.png
