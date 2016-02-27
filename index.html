@@ -31,6 +31,7 @@
 						<ul class="dropdown-menu" role="menu" id="layer-list">
 							<li><a data-layer="station"><i class="fa fa-eye fa-fw fa-pull-left"></i>Station</a></li>
 							<li><a data-layer="disposals"><i class="fa fa-eye fa-fw fa-pull-left"></i>Disposals</a></li>
+							<li><a data-layer="atmos"><i class="fa fa-eye fa-fw fa-pull-left"></i>Atmosia</a></li>
 							<li><a data-layer="wires"><i class="fa fa-eye fa-fw fa-pull-left"></i>Wires</a></li>
 							<li><a data-layer="malmalmalam"><i class="fa fa-eye fa-fw fa-pull-left"></i>Malmalmalam</a></li>
 						</ul>
@@ -104,6 +105,13 @@
 					zIndex: 0
 				}).addTo(map),
 			disposals: L.tileLayer("disposals/{z}/{x}/{y}.png", {
+					minZoom: 2,
+					maxZoom: 5,
+					continuousWorld: true,
+					tms: true,
+					zIndex: 1
+				}).addTo(map),
+			atmos: L.tileLayer("atmos/{z}/{x}/{y}.png", {
 					minZoom: 2,
 					maxZoom: 5,
 					continuousWorld: true,
